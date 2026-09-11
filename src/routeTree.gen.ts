@@ -10,33 +10,74 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as MinisuperRouteImport } from './routes/minisuper'
+import { Route as ProductorRouteImport } from './routes/productor'
+import { Route as TransportistaRouteImport } from './routes/transportista'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinisuperRoute = MinisuperRouteImport.update({
+  id: '/minisuper',
+  path: '/minisuper',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductorRoute = ProductorRouteImport.update({
+  id: '/productor',
+  path: '/productor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransportistaRoute = TransportistaRouteImport.update({
+  id: '/transportista',
+  path: '/transportista',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/minisuper': typeof MinisuperRoute
+  '/productor': typeof ProductorRoute
+  '/transportista': typeof TransportistaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/minisuper': typeof MinisuperRoute
+  '/productor': typeof ProductorRoute
+  '/transportista': typeof TransportistaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/minisuper': typeof MinisuperRoute
+  '/productor': typeof ProductorRoute
+  '/transportista': typeof TransportistaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/admin' | '/minisuper' | '/productor' | '/transportista'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/admin' | '/minisuper' | '/productor' | '/transportista'
+  id:
+    '__root__' | '/' | '/admin' | '/minisuper' | '/productor' | '/transportista'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  MinisuperRoute: typeof MinisuperRoute
+  ProductorRoute: typeof ProductorRoute
+  TransportistaRoute: typeof TransportistaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +89,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minisuper': {
+      id: '/minisuper'
+      path: '/minisuper'
+      fullPath: '/minisuper'
+      preLoaderRoute: typeof MinisuperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/productor': {
+      id: '/productor'
+      path: '/productor'
+      fullPath: '/productor'
+      preLoaderRoute: typeof ProductorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transportista': {
+      id: '/transportista'
+      path: '/transportista'
+      fullPath: '/transportista'
+      preLoaderRoute: typeof TransportistaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  MinisuperRoute: MinisuperRoute,
+  ProductorRoute: ProductorRoute,
+  TransportistaRoute: TransportistaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
