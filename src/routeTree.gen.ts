@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as MinisuperRouteImport } from './routes/minisuper'
 import { Route as ProductorRouteImport } from './routes/productor'
+import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as TransportistaRouteImport } from './routes/transportista'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const ProductorRoute = ProductorRouteImport.update({
   path: '/productor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransportistaRoute = TransportistaRouteImport.update({
   id: '/transportista',
   path: '/transportista',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/minisuper': typeof MinisuperRoute
   '/productor': typeof ProductorRoute
+  '/registro': typeof RegistroRoute
   '/transportista': typeof TransportistaRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/minisuper': typeof MinisuperRoute
   '/productor': typeof ProductorRoute
+  '/registro': typeof RegistroRoute
   '/transportista': typeof TransportistaRoute
 }
 export interface FileRoutesById {
@@ -61,15 +69,34 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/minisuper': typeof MinisuperRoute
   '/productor': typeof ProductorRoute
+  '/registro': typeof RegistroRoute
   '/transportista': typeof TransportistaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/minisuper' | '/productor' | '/transportista'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/minisuper'
+    | '/productor'
+    | '/registro'
+    | '/transportista'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/minisuper' | '/productor' | '/transportista'
+  to:
+    | '/'
+    | '/admin'
+    | '/minisuper'
+    | '/productor'
+    | '/registro'
+    | '/transportista'
   id:
-    '__root__' | '/' | '/admin' | '/minisuper' | '/productor' | '/transportista'
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/minisuper'
+    | '/productor'
+    | '/registro'
+    | '/transportista'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +104,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   MinisuperRoute: typeof MinisuperRoute
   ProductorRoute: typeof ProductorRoute
+  RegistroRoute: typeof RegistroRoute
   TransportistaRoute: typeof TransportistaRoute
 }
 
@@ -110,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transportista': {
       id: '/transportista'
       path: '/transportista'
@@ -125,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   MinisuperRoute: MinisuperRoute,
   ProductorRoute: ProductorRoute,
+  RegistroRoute: RegistroRoute,
   TransportistaRoute: TransportistaRoute,
 }
 export const routeTree = rootRouteImport
