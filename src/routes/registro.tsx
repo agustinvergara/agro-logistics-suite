@@ -151,8 +151,14 @@ function Registro() {
                   key={k}
                   type="button"
                   onClick={() => setTipo(k)}
-                  className={`rounded-[var(--radius)] border p-5 text-left transition-colors ${tipo === k ? "border-primary bg-secondary" : "border-input hover:bg-secondary"}`}
+                  aria-pressed={tipo === k}
+                  className={`relative cursor-pointer rounded-[var(--radius)] border-2 p-5 text-left transition-all ${tipo === k ? "border-primary bg-secondary shadow-soft ring-2 ring-primary/30" : "border-input hover:border-primary/50 hover:bg-secondary/60"}`}
                 >
+                  {tipo === k && (
+                    <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Check className="size-4" />
+                    </span>
+                  )}
                   <Icon className="size-8 text-primary" />
                   <div className="mt-3 font-semibold text-foreground">{title}</div>
                   <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
