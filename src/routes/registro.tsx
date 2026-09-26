@@ -77,7 +77,7 @@ function Registro() {
 
   async function submit() {
     if (!tipo) return;
-    if (!terms) return toast.error("Debes aceptar los términos y condiciones");
+    if (!terms) { toast.error("Debes aceptar los términos y condiciones"); return; }
     setLoading(true);
     const role = tipo as Role;
     const profile = tipo === "productor" ? p : { ...t, capacityKg: Number(t.capacityKg) };
@@ -275,8 +275,8 @@ function Registro() {
               <button
                 type="button"
                 onClick={() => {
-                  if (step === 0 && !tipo) return toast.error("Selecciona un tipo de cuenta");
-                  if (step === 1 && !validateData()) return toast.error("Revisa los campos marcados");
+                  if (step === 0 && !tipo) { toast.error("Selecciona un tipo de cuenta"); return; }
+                  if (step === 1 && !validateData()) { toast.error("Revisa los campos marcados"); return; }
                   setStep(step + 1);
                 }}
                 className="rounded-[var(--radius)] bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-soft hover:opacity-90"
