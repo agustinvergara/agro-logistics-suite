@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Leaf, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -137,6 +137,12 @@ function Login() {
             {loading && <Loader2 className="size-4 animate-spin" />}
             {loading ? "Cargando..." : "Iniciar Sesión"}
           </button>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            ¿No tienes cuenta?{" "}
+            <Link to="/auth/registro" className="font-medium text-primary hover:underline">
+              Regístrate
+            </Link>
+          </p>
         </form>
       </div>
     </div>
