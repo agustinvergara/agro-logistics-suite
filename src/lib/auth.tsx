@@ -38,7 +38,9 @@ type AuthContextValue = {
   logout: () => void;
 };
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+// Mantener un único contexto aunque el módulo se recargue en caliente (HMR).
+const g = globalThis as unknown as { __mangoAuthCtx?: React.Context<AuthContextValue | null> };
+const AuthContext = (g.__mangoAuthCtx ??= createContext<AuthContextValue | null>(null));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
