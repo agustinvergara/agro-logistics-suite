@@ -146,33 +146,7 @@ function Registro() {
             </li>
           ))}
         </ol>
-
-        <div className="mt-8 rounded-[var(--radius)] border border-border bg-card p-6 shadow-soft">
-          {step === 0 && (
-            <div className="grid gap-4 sm:grid-cols-3">
-              {([
-                { k: "productor", icon: Sprout, title: "Soy Productor", desc: "Publica tus cosechas y recibe pagos protegidos." },
-                { k: "transportista", icon: Truck, title: "Soy Transportista", desc: "Encuentra viajes cercanos y cobra al entregar." },
-                { k: "minisuper", icon: Store, title: "Soy Comprador", desc: "Tienda o comercio: compra directo al productor en el mercado." },
-              ] as const).map(({ k, icon: Icon, title, desc }) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setTipo(k)}
-                  aria-pressed={tipo === k}
-                  className={`relative cursor-pointer rounded-[var(--radius)] border-2 p-5 text-left transition-all ${tipo === k ? "border-primary bg-secondary shadow-soft ring-2 ring-primary/30" : "border-input hover:border-primary/50 hover:bg-secondary/60"}`}
-                >
-                  {tipo === k && (
-                    <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="size-4" />
-                    </span>
-                  )}
-                  <Icon className="size-8 text-primary" />
-                  <div className="mt-3 font-semibold text-foreground">{title}</div>
-                  <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
-                </button>
-              ))}
-            </div>
+type Tipo = "productor" | "transportista" | "minisuper";type Tipo = "productor" | "transportista" | "minisuper";
           )}
 
           {step === 1 && (
