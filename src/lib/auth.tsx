@@ -1,3 +1,4 @@
+import type React from "react";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type Role = "productor" | "minisuper" | "transportista" | "admin";
