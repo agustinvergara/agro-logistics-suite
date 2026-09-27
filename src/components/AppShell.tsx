@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, Leaf } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
-import { ROLE_LABELS, ROLE_ROUTES, useAuth, type Role } from "@/lib/auth";
+import { ROLE_ACCESS, ROLE_LABELS, ROLE_ROUTES, useAuth, type Role } from "@/lib/auth";
 
 export function Spinner({ label = "Cargando..." }: { label?: string }) {
   return (
@@ -43,7 +43,7 @@ export function AppShell({
             Mango App
           </Link>
           <nav className="flex flex-wrap items-center gap-1 text-sm">
-            {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
+            {ROLE_ACCESS[session.role].map((r) => (
               <Link
                 key={r}
                 to={ROLE_ROUTES[r]}
@@ -51,7 +51,7 @@ export function AppShell({
                   r === role ? "bg-background/25 font-medium" : "hover:bg-background/15"
                 }`}
               >
-                {ROLE_LABELS[r]}
+                {r === "minisuper" ? "Mercado" : ROLE_LABELS[r]}
               </Link>
             ))}
           </nav>

@@ -4,7 +4,7 @@ export type Role = "productor" | "minisuper" | "transportista" | "admin";
 
 export const ROLE_LABELS: Record<Role, string> = {
   productor: "Productor",
-  minisuper: "Minisuper",
+  minisuper: "Comprador",
   transportista: "Transportista",
   admin: "Admin",
 };
@@ -14,6 +14,14 @@ export const ROLE_ROUTES: Record<Role, string> = {
   minisuper: "/minisuper",
   transportista: "/transportista",
   admin: "/admin",
+};
+
+/** Paneles visibles por rol en el menú superior. */
+export const ROLE_ACCESS: Record<Role, Role[]> = {
+  productor: ["productor", "minisuper"],
+  minisuper: ["minisuper"],
+  transportista: ["transportista"],
+  admin: ["productor", "minisuper", "transportista", "admin"],
 };
 
 export type Session = {
