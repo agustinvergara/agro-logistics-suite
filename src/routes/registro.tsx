@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Leaf, Loader2, Sprout, Truck, Check } from "lucide-react";
+import { Leaf, Loader2, Sprout, Truck, Check, Store } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { API_BASE } from "@/lib/api";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/registro")({
   component: Registro,
 });
 
-type Tipo = "productor" | "transportista";
+type Tipo = "productor" | "transportista" | "minisuper";
 
 const commonSchema = z
   .object({
@@ -49,6 +49,12 @@ const transportistaSchema = z.object({
   license: z.string().trim().min(3, "Ingresa el número de licencia").max(40),
 });
 
+const compradorSchema = z.object({
+  businessType: z.string().min(1, "Selecciona el tipo de comercio"),
+  province: z.string().trim().min(2, "Selecciona la provincia"),
+  address: z.string().trim().min(5, "Ingresa la dirección de entrega").max(200),
+});
+
 const PROVINCIAS = ["Bocas del Toro", "Coclé", "Colón", "Chiriquí", "Darién", "Herrera", "Los Santos", "Panamá", "Panamá Oeste", "Veraguas"];
 const inputCls =
   "mt-1.5 w-full rounded-[var(--radius)] border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/25";
@@ -58,6 +64,7 @@ function Registro() {
   const [tipo, setTipo] = useState<Tipo | null>(null);
   const [c, setC] = useState({ fullName: "", email: "", phone: "", password: "", confirm: "", companyName: "", taxId: "" });
   const [p, setP] = useState({ farmName: "", province: "", crops: "", hasRefrigeration: false });
+  const [b, setB] = useState({ businessType: "", province: "", address: "" });
   const [t, setT] = useState({ vehicleType: "", plate: "", capacityKg: "", refrigerated: false, license: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [terms, setTerms] = useState(false);
@@ -69,7 +76,7 @@ function Registro() {
     const errs: Record<string, string> = {};
     const r1 = commonSchema.safeParse(c);
     if (!r1.success) r1.error.issues.forEach((i) => (errs[String(i.path[0])] ??= i.message));
-    const r2 = tipo === "productor" ? productorSchema.safeParse(p) : transportistaSchema.safeParse(t);
+    const r2 = tipo === "productor" ? productorSchema.safeParse(p) : tipo === "minisuper" ? compradorSchema.safeParse(b) : transportistaSchema.safeParse(t);
     if (!r2.success) r2.error.issues.forEach((i) => (errs[String(i.path[0])] ??= i.message));
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -80,7 +87,7 @@ function Registro() {
     if (!terms) { toast.error("Debes aceptar los términos y condiciones"); return; }
     setLoading(true);
     const role = tipo as Role;
-    const profile = tipo === "productor" ? p : { ...t, capacityKg: Number(t.capacityKg) };
+    const profile = tipo === "productor" ? p : tipo === "minisuper" ? b : { ...t, capacityKg: Number(t.capacityKg) };
     const { confirm: _c, ...common } = c;
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -142,10 +149,11 @@ function Registro() {
 
         <div className="mt-8 rounded-[var(--radius)] border border-border bg-card p-6 shadow-soft">
           {step === 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               {([
                 { k: "productor", icon: Sprout, title: "Soy Productor", desc: "Publica tus cosechas y recibe pagos protegidos." },
                 { k: "transportista", icon: Truck, title: "Soy Transportista", desc: "Encuentra viajes cercanos y cobra al entregar." },
+                { k: "minisuper", icon: Store, title: "Soy Comprador", desc: "Tienda o comercio: compra directo al productor en el mercado." },
               ] as const).map(({ k, icon: Icon, title, desc }) => (
                 <button
                   key={k}
@@ -179,7 +187,7 @@ function Registro() {
               {field("Confirmar Contraseña", "confirm", "password", "••••••••")}
 
               <div className="sm:col-span-2 mt-2 border-t border-border pt-4 text-sm font-semibold text-foreground">
-                {tipo === "productor" ? "Datos de la finca" : "Datos del vehículo"}
+                {tipo === "productor" ? "Datos de la finca" : tipo === "minisuper" ? "Datos del comercio" : "Datos del vehículo"}
               </div>
 
               {tipo === "productor" ? (
@@ -202,6 +210,27 @@ function Registro() {
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={p.hasRefrigeration} onChange={(e) => setP({ ...p, hasRefrigeration: e.target.checked })} />
                     ¿Cuenta con refrigeración?
+                  </label>
+                </>
+              ) : tipo === "minisuper" ? (
+                <>
+                  <label className="block text-sm font-medium">Tipo de comercio
+                    <select className={inputCls} value={b.businessType} onChange={(e) => setB({ ...b, businessType: e.target.value })}>
+                      <option value="">Selecciona...</option>
+                      <option>Minisuper</option><option>Supermercado</option><option>Restaurante</option><option>Hotel</option><option>Frutería</option><option>Otro</option>
+                    </select>
+                    <Err k="businessType" />
+                  </label>
+                  <label className="block text-sm font-medium">Provincia
+                    <select className={inputCls} value={b.province} onChange={(e) => setB({ ...b, province: e.target.value })}>
+                      <option value="">Selecciona...</option>
+                      {PROVINCIAS.map((x) => <option key={x}>{x}</option>)}
+                    </select>
+                    <Err k="province" />
+                  </label>
+                  <label className="block text-sm font-medium sm:col-span-2">Dirección de entrega
+                    <input className={inputCls} value={b.address} onChange={(e) => setB({ ...b, address: e.target.value })} />
+                    <Err k="address" />
                   </label>
                 </>
               ) : (
@@ -238,7 +267,7 @@ function Registro() {
             <div className="space-y-4 text-sm">
               <h2 className="text-base font-semibold text-foreground">Revisa tus datos</h2>
               <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-                <Row l="Tipo de cuenta" v={tipo === "productor" ? "Productor" : "Transportista"} />
+                <Row l="Tipo de cuenta" v={tipo === "productor" ? "Productor" : tipo === "minisuper" ? "Comprador" : "Transportista"} />
                 <Row l="Nombre" v={c.fullName} />
                 <Row l="Correo" v={c.email} />
                 <Row l="Teléfono" v={c.phone} />
@@ -250,6 +279,12 @@ function Registro() {
                     <Row l="Provincia" v={p.province} />
                     <Row l="Cultivos" v={p.crops} />
                     <Row l="Refrigeración" v={p.hasRefrigeration ? "Sí" : "No"} />
+                  </>
+                ) : tipo === "minisuper" ? (
+                  <>
+                    <Row l="Comercio" v={b.businessType} />
+                    <Row l="Provincia" v={b.province} />
+                    <Row l="Dirección" v={b.address} />
                   </>
                 ) : (
                   <>

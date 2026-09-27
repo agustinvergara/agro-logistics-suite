@@ -9,12 +9,12 @@ import { AppShell } from "@/components/AppShell";
 export const Route = createFileRoute("/minisuper")({
   head: () => ({
     meta: [
-      { title: "Panel de Minisuper — Mango App" },
+      { title: "Mercado de Productos — Mango App" },
       {
         name: "description",
         content: "Compra perecederos directo del productor con pago protegido en escrow.",
       },
-      { property: "og:title", content: "Panel de Minisuper — Mango App" },
+      { property: "og:title", content: "Mercado de Productos — Mango App" },
       {
         property: "og:description",
         content: "Explora el mercado de perecederos y realiza órdenes en segundos.",
