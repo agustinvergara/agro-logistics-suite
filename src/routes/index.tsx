@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Leaf, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -41,21 +41,29 @@ function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) throw new Error("login");
+      
+      if (!res.ok) {
+        toast.error("Credenciales inválidas");
+        setLoading(false);
+        return;
+      }
+      
       const data = await res.json();
+      const userRole = data.role as Role;
+      
       saveSession({
-        token: data.token ?? "demo-token",
-        tenantId: String(data.tenantId ?? "1"),
-        role: (data.role as Role) ?? role,
+        token: data.token,
+        tenantId: String(data.tenantId),
+        role: userRole,
         email,
       });
+      
       toast.success("Sesión iniciada");
-    } catch {
-      saveSession({ token: "demo-token", tenantId: "1", role, email });
-      toast.info("Usando datos de prueba");
+      navigate({ to: ROLE_ROUTES[userRole] });
+    } catch (error) {
+      toast.error("Error de conexión con el servidor");
     } finally {
       setLoading(false);
-      navigate({ to: ROLE_ROUTES[role] });
     }
   }
 
@@ -109,26 +117,6 @@ function Login() {
             />
           </label>
 
-          <fieldset className="mt-6">
-            <legend className="text-sm font-medium text-foreground">Entrar como:</legend>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                <button
-                  type="button"
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`rounded-[var(--radius)] border px-3 py-2 text-sm transition-colors ${
-                    role === r
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  {ROLE_LABELS[r]}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
           <button
             type="submit"
             disabled={loading}
@@ -137,6 +125,12 @@ function Login() {
             {loading && <Loader2 className="size-4 animate-spin" />}
             {loading ? "Cargando..." : "Iniciar Sesión"}
           </button>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            ¿No tienes cuenta?{" "}
+            <Link to="/auth/registro" className="font-medium text-primary hover:underline">
+              Regístrate
+            </Link>
+          </p>
         </form>
       </div>
     </div>
