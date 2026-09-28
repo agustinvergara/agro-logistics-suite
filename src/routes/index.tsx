@@ -41,21 +41,29 @@ function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) throw new Error("login");
+      
+      if (!res.ok) {
+        toast.error("Credenciales inválidas");
+        setLoading(false);
+        return;
+      }
+      
       const data = await res.json();
+      const userRole = data.role as Role;
+      
       saveSession({
-        token: data.token ?? "demo-token",
-        tenantId: String(data.tenantId ?? "1"),
-        role: (data.role as Role) ?? role,
+        token: data.token,
+        tenantId: String(data.tenantId),
+        role: userRole,
         email,
       });
+      
       toast.success("Sesión iniciada");
-    } catch {
-      saveSession({ token: "demo-token", tenantId: "1", role, email });
-      toast.info("Usando datos de prueba");
+      navigate({ to: ROLE_ROUTES[userRole] });
+    } catch (error) {
+      toast.error("Error de conexión con el servidor");
     } finally {
       setLoading(false);
-      navigate({ to: ROLE_ROUTES[role] });
     }
   }
 
@@ -108,26 +116,6 @@ function Login() {
               className="mt-1.5 w-full rounded-[var(--radius)] border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
             />
           </label>
-
-          <fieldset className="mt-6">
-            <legend className="text-sm font-medium text-foreground">Entrar como:</legend>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                <button
-                  type="button"
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`rounded-[var(--radius)] border px-3 py-2 text-sm transition-colors ${
-                    role === r
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  {ROLE_LABELS[r]}
-                </button>
-              ))}
-            </div>
-          </fieldset>
 
           <button
             type="submit"
