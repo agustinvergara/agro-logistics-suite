@@ -10,7 +10,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export const ROLE_ROUTES: Record<Role, string> = {
-  productor: "/productor",
+  productor: "/productor/publish",
   minisuper: "/minisuper",
   transportista: "/transportista",
   admin: "/admin",

@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { LogOut, Leaf } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
-import { ROLE_LABELS, ROLE_ROUTES, useAuth, type Role } from "@/lib/auth";
+import { ROLE_ROUTES, useAuth, type Role } from "@/lib/auth";
 
 export function Spinner({ label = "Cargando..." }: { label?: string }) {
   return (
@@ -12,6 +12,25 @@ export function Spinner({ label = "Cargando..." }: { label?: string }) {
   );
 }
 
+const ROLE_NAV_LINKS: Record<Role, { label: string; to: string }[]> = {
+  productor: [
+    { label: "Panel de Productor", to: "/productor/publish" },
+    { label: "Marketplace", to: "/minisuper" },
+    { label: "Admin", to: "/admin" },
+  ],
+  minisuper: [
+    { label: "Marketplace", to: "/minisuper" },
+    { label: "Admin", to: "/admin" },
+  ],
+  transportista: [
+    { label: "Mapa & Rutas", to: "/transportista" },
+    { label: "Admin", to: "/admin" },
+  ],
+  admin: [
+    { label: "Admin", to: "/admin" },
+  ],
+};
+
 export function AppShell({
   role,
   title,
@@ -19,7 +38,7 @@ export function AppShell({
   children,
   fullBleed = false,
 }: {
-  role: Role;
+  role: Role; // Rol al que pertenece la vista conceptualmente
   title: string;
   subtitle?: string;
   children: ReactNode;
@@ -27,12 +46,29 @@ export function AppShell({
 }) {
   const { session, ready, logout } = useAuth();
   const navigate = useNavigate();
+  const routerState = useRouterState();
+  const currentPath = routerState.location.pathname;
 
   useEffect(() => {
-    if (ready && !session) navigate({ to: "/", replace: true });
-  }, [ready, session, navigate]);
+    if (!ready) return;
+    if (!session) {
+      navigate({ to: "/", replace: true });
+      return;
+    }
+
+    // Seguridad: verificar si el rol del usuario tiene permiso para ver esta ruta
+    const allowedLinks = ROLE_NAV_LINKS[session.role] || [];
+    const isAllowed = allowedLinks.some((link) => currentPath.startsWith(link.to));
+
+    if (!isAllowed) {
+      // Si intenta entrar a un área prohibida, lo pateamos a su ruta base
+      navigate({ to: ROLE_ROUTES[session.role], replace: true });
+    }
+  }, [ready, session, navigate, currentPath]);
 
   if (!ready || !session) return <Spinner />;
+
+  const myLinks = ROLE_NAV_LINKS[session.role] || [];
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -43,17 +79,20 @@ export function AppShell({
             Mango App
           </Link>
           <nav className="flex flex-wrap items-center gap-1 text-sm">
-            {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-              <Link
-                key={r}
-                to={ROLE_ROUTES[r]}
-                className={`rounded-full px-3 py-1.5 transition-colors ${
-                  r === role ? "bg-background/25 font-medium" : "hover:bg-background/15"
-                }`}
-              >
-                {ROLE_LABELS[r]}
-              </Link>
-            ))}
+            {myLinks.map((link) => {
+              const isActive = currentPath.startsWith(link.to);
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`rounded-full px-3 py-1.5 transition-colors ${
+                    isActive ? "bg-background/25 font-medium" : "hover:bg-background/15"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <span className="hidden opacity-90 sm:inline">
