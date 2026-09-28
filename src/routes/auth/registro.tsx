@@ -75,7 +75,7 @@ function Registro() {
     const errs: Record<string, string> = {};
     const r1 = commonSchema.safeParse(c);
     if (!r1.success) r1.error.issues.forEach((i) => (errs[String(i.path[0])] ??= i.message));
-    const r2 = tipo === "productor" ? productorSchema.safeParse(p) : transportistaSchema.safeParse(t);
+    const r2 = tipo === "productor" ? productorSchema.safeParse(p) : tipo === "minisuper" ? compradorSchema.safeParse(b) : transportistaSchema.safeParse(t);
     if (!r2.success) r2.error.issues.forEach((i) => (errs[String(i.path[0])] ??= i.message));
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -86,7 +86,7 @@ function Registro() {
     if (!terms) { toast.error("Debes aceptar los términos y condiciones"); return; }
     setLoading(true);
     const role = tipo as Role;
-    const profile = tipo === "productor" ? p : { ...t, capacityKg: Number(t.capacityKg) };
+    const profile = tipo === "productor" ? p : tipo === "minisuper" ? b : { ...t, capacityKg: Number(t.capacityKg) };
     const { confirm: _c, ...common } = c;
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -94,22 +94,24 @@ function Registro() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role, ...common, profile }),
       });
-      if (!res.ok) throw new Error("register");
-      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error("Error al registrarse. Verifica tus datos.");
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
       saveSession({
-        token: data.token ?? "demo-token",
-        tenantId: String(data.tenantId ?? "1"),
+        token: data.token,
+        tenantId: String(data.tenantId),
         role: (data.role as Role) ?? role,
         email: c.email,
       });
       toast.success("Cuenta creada con éxito");
-    } catch {
-      saveSession({ token: "demo-token", tenantId: "1", role, email: c.email });
-      toast.success("Cuenta creada con éxito");
-      toast.info("Usando datos de prueba");
+      navigate({ to: ROLE_ROUTES[role] });
+    } catch (error) {
+      toast.error("Error de conexión con el servidor");
     } finally {
       setLoading(false);
-      navigate({ to: ROLE_ROUTES[role] });
     }
   }
 
