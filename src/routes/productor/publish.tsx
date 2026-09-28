@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { ImagePlus, Loader2, PackagePlus, RefreshCcw, Wallet, X } from "lucide-react";
+import { Camera, Loader2, PackagePlus, RefreshCcw, Wallet, X, ImagePlus} from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { MOCK_BALANCE } from "@/lib/mock";
@@ -26,6 +26,15 @@ export const Route = createFileRoute("/productor/publish")({
 
 const CATEGORIAS = ["Frutas", "Vegetales", "Tubérculos", "Granos", "Lácteos"];
 const ESTADOS_PRODUCTO = ["Fresco", "Maduro", "Para procesar"];
+const UNIDADES = ["Kilo", "Libra", "Unidad", "Caja", "Saco"] as const;
+type Unidad = (typeof UNIDADES)[number];
+const UNIDAD_LABEL: Record<Unidad, string> = {
+  Kilo: "kg",
+  Libra: "lb",
+  Unidad: "unidad",
+  Caja: "caja",
+  Saco: "saco",
+};
 
 function money(n: number) {
   return `$${n.toLocaleString("es-PA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -37,6 +46,7 @@ function PublishProductPage() {
   const [requiresRefrigeration, setRequiresRefrigeration] = useState(false);
   const [basePricePerUnit, setBasePricePerUnit] = useState("");
   const [stockAvailable, setStockAvailable] = useState("");
+  const [unit, setUnit] = useState<Unidad>("Kilo");
   const [description, setDescription] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
   const [condition, setCondition] = useState(ESTADOS_PRODUCTO[0]);
@@ -97,6 +107,7 @@ function PublishProductPage() {
       requiresRefrigeration,
       basePricePerUnit: Number(basePricePerUnit),
       stockAvailable: Number(stockAvailable),
+      unitType: unit,
       description,
       expirationDate: expirationDate || null,
       conditionType: condition,
@@ -112,6 +123,7 @@ function PublishProductPage() {
       setName("");
       setBasePricePerUnit("");
       setStockAvailable("");
+      setUnit("Kilo");
       setRequiresRefrigeration(false);
       setDescription("");
       setExpirationDate("");
@@ -177,7 +189,22 @@ function PublishProductPage() {
             </label>
 
             <label className="text-sm font-medium">
-              Precio base por unidad
+              Unidad de medida (balanza)
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value as Unidad)}
+                className={inputCls}
+              >
+                {UNIDADES.map((u) => (
+                  <option key={u} value={u}>
+                    {u} ({UNIDAD_LABEL[u]})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm font-medium">
+              Precio base por {unit.toLowerCase()} ({UNIDAD_LABEL[unit]})
               <input
                 required
                 type="number"
@@ -191,7 +218,7 @@ function PublishProductPage() {
             </label>
 
             <label className="text-sm font-medium">
-              Stock disponible
+              Stock disponible ({UNIDAD_LABEL[unit]})
               <input
                 required
                 type="number"

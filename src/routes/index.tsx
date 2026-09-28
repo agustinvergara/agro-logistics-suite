@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Login() {
-  const [email, setEmail] = useState("productor@mangoapp.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("productor");
   const [loading, setLoading] = useState(false);
