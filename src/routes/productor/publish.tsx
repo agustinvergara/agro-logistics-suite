@@ -5,6 +5,11 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { MOCK_BALANCE } from "@/lib/mock";
 import { AppShell } from "@/components/AppShell";
+import {
+  MyProducts,
+  PRODUCTO_PUBLICADO_EVENT,
+  type ProductoPublicadoDetalle,
+} from "@/components/products/MyProducts";
 
 export const Route = createFileRoute("/productor/publish")({
   head: () => ({
@@ -116,6 +121,20 @@ function PublishProductPage() {
     try {
       await apiFetch("/api/marketplace/perecederos/publish", { method: "POST", body: payload });
       toast.success("Producto publicado con éxito");
+      
+      const detail: ProductoPublicadoDetalle = {
+        name,
+        category,
+        requiresRefrigeration,
+        basePricePerUnit: Number(basePricePerUnit),
+        stockAvailable: Number(stockAvailable),
+        unit,
+        description,
+        expirationDate,
+        condition,
+        photos: []
+      };
+      window.dispatchEvent(new CustomEvent(PRODUCTO_PUBLICADO_EVENT, { detail }));
     } catch (error) {
       toast.error("Error al publicar el producto");
     } finally {
@@ -360,6 +379,7 @@ function PublishProductPage() {
           )}
         </section>
       </div>
+           <MyProducts />
     </AppShell>
   );
 }
