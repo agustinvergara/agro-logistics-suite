@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Loader2, PackagePlus, RefreshCcw, Wallet } from "lucide-react";
+import { ImagePlus, Loader2, PackagePlus, RefreshCcw, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { MOCK_BALANCE } from "@/lib/mock";
 import { AppShell } from "@/components/AppShell";
 
-export const Route = createFileRoute("/productor")({
+export const Route = createFileRoute("/productor/publish")({
   head: () => ({
     meta: [
       { title: "Panel de Productor — Mango App" },
@@ -21,22 +21,44 @@ export const Route = createFileRoute("/productor")({
       },
     ],
   }),
-  component: ProductorPage,
+  component: PublishProductPage,
 });
 
 const CATEGORIAS = ["Frutas", "Vegetales", "Tubérculos", "Granos", "Lácteos"];
+const ESTADOS_PRODUCTO = ["Fresco", "Maduro", "Para procesar"];
 
 function money(n: number) {
   return `$${n.toLocaleString("es-PA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function ProductorPage() {
+function PublishProductPage() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState(CATEGORIAS[0]);
   const [requiresRefrigeration, setRequiresRefrigeration] = useState(false);
   const [basePricePerUnit, setBasePricePerUnit] = useState("");
   const [stockAvailable, setStockAvailable] = useState("");
+  const [description, setDescription] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
+  const [condition, setCondition] = useState(ESTADOS_PRODUCTO[0]);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [publishing, setPublishing] = useState(false);
+
+  function addPhotos(files: FileList | null) {
+    if (!files) return;
+    const nuevas = Array.from(files)
+      .filter((f) => f.type.startsWith("image/"))
+      .slice(0, 3 - photos.length)
+      .map((file) => ({ file, preview: URL.createObjectURL(file) }));
+    if (nuevas.length) setPhotos((prev) => [...prev, ...nuevas].slice(0, 3));
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((prev) => {
+      const foto = prev[index];
+      if (foto) URL.revokeObjectURL(foto.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
 
   const [balance, setBalance] = useState<{
     availableBalance: number;
@@ -75,19 +97,27 @@ function ProductorPage() {
       requiresRefrigeration,
       basePricePerUnit: Number(basePricePerUnit),
       stockAvailable: Number(stockAvailable),
+      description,
+      expirationDate: expirationDate || null,
+      conditionType: condition,
+      photoUrls: [], // TODO: Subir a S3 y reemplazar
     };
     try {
       await apiFetch("/api/marketplace/perecederos/publish", { method: "POST", body: payload });
       toast.success("Producto publicado con éxito");
-    } catch {
-      toast.info("Usando datos de prueba");
-      toast.success("Producto publicado con éxito");
+    } catch (error) {
+      toast.error("Error al publicar el producto");
     } finally {
       setPublishing(false);
       setName("");
       setBasePricePerUnit("");
       setStockAvailable("");
       setRequiresRefrigeration(false);
+      setDescription("");
+      setExpirationDate("");
+      setCondition(ESTADOS_PRODUCTO[0]);
+      photos.forEach((p) => URL.revokeObjectURL(p.preview));
+      setPhotos([]);
     }
   }
 
@@ -116,6 +146,18 @@ function ProductorPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ej. Mango Tommy Atkins"
                 className={inputCls}
+              />
+            </label>
+
+            <label className="text-sm font-medium sm:col-span-2">
+              Descripción
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe tu producto: calidad, calibre, empaque..."
+                rows={3}
+                maxLength={500}
+                className={`${inputCls} resize-none`}
               />
             </label>
 
@@ -160,6 +202,71 @@ function ProductorPage() {
                 className={inputCls}
               />
             </label>
+
+            <label className="text-sm font-medium">
+              Fecha de expiración
+              <input
+                type="date"
+                value={expirationDate}
+                onChange={(e) => setExpirationDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className={inputCls}
+              />
+            </label>
+
+            <label className="text-sm font-medium">
+              Estado del producto
+              <select
+                value={condition}
+                onChange={(e) => setCondition(e.target.value)}
+                className={inputCls}
+              >
+                {ESTADOS_PRODUCTO.map((e) => (
+                  <option key={e} value={e}>
+                    {e}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="sm:col-span-2">
+              <span className="text-sm font-medium">Fotos del producto (máx. 3)</span>
+              <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                {photos.map((p, i) => (
+                  <div key={p.preview} className="relative">
+                    <img
+                      src={p.preview}
+                      alt={`Foto ${i + 1}`}
+                      className="size-20 rounded-[var(--radius)] border border-border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      aria-label="Quitar foto"
+                      className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow-soft"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < 3 && (
+                  <label className="flex size-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-[var(--radius)] border border-dashed border-input text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                    <ImagePlus className="size-5" />
+                    <span className="text-[10px]">Subir foto</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        addPhotos(e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
 
             <label className="flex items-center gap-3 self-end rounded-[var(--radius)] border border-input bg-secondary/50 px-3 py-2.5 text-sm font-medium">
               <input
