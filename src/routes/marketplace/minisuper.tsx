@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Snowflake, ShoppingCart, X, Package } from "lucide-react";
+import { Calendar, Loader2, Minus, Plus, Snowflake, ShoppingCart, X, Package } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
@@ -52,6 +52,14 @@ function money(n: number) {
 
 function unidadLabel(unit?: string) {
   return UNIDAD_LABEL[unit ?? ""] ?? unit ?? "unidad";
+}
+
+function fecha(d?: string) {
+  if (!d) return null;
+  const parsed = new Date(`${d}T00:00:00`);
+  return Number.isNaN(parsed.getTime())
+    ? null
+    : parsed.toLocaleDateString("es-PA", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function MinisuperPage() {
@@ -178,56 +186,166 @@ function MinisuperPage() {
       )}
 
       {seleccionado && (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-foreground/40 p-4">
-          <div className="w-full max-w-sm rounded-[var(--radius)] border border-border bg-popover p-6 shadow-soft">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-popover-foreground">Confirmar compra</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{seleccionado.name}</p>
-              </div>
-              <button
-                onClick={() => setSeleccionado(null)}
-                aria-label="Cerrar"
-                className="rounded-full p-1 hover:bg-secondary"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <label className="mt-5 block text-sm font-medium">
-              Cantidad ({unidadLabel(seleccionado.unit)})
-              <input
-                type="number"
-                min="1"
-                max={seleccionado.stockAvailable}
-                value={cantidad}
-                onChange={(e) => setCantidad(e.target.value)}
-                className="mt-1.5 w-full rounded-[var(--radius)] border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
+ <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-foreground/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--radius)] border border-border bg-popover shadow-soft">
+            {seleccionado.image ? (
+              <img
+                src={seleccionado.image}
+                alt={seleccionado.name}
+                className="h-56 w-full rounded-t-[var(--radius)] object-cover"
               />
-            </label>
+            ) : (
+              <div className="flex h-40 w-full items-center justify-center rounded-t-[var(--radius)] bg-secondary">
+                <ShoppingCart className="size-10 text-muted-foreground" />
+              </div>
+            )}
 
-            <p className="mt-3 text-sm text-muted-foreground">
-              Total estimado:{" "}
-              <span className="font-semibold text-foreground">
-                {money(Number(seleccionado.basePricePerUnit) * Number(cantidad || 0))}
-              </span>
-            </p>
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-popover-foreground">
+                    {seleccionado.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {seleccionado.category}
+                    {seleccionado.producer ? ` · ${seleccionado.producer}` : ""}
+                  </p>
+                  {seleccionado.requiresRefrigeration && (
+                    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-mango/40 bg-mango/15 px-3 py-1.5 text-xs font-medium text-mango-foreground">
+                      <Snowflake className="size-3.5" />
+                      Requiere refrigeración
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSeleccionado(null)}
+                  aria-label="Cerrar"
+                  className="rounded-full p-1 hover:bg-secondary"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
 
-            <div className="mt-6 flex gap-2">
-              <button
-                onClick={() => setSeleccionado(null)}
-                className="flex-1 rounded-[var(--radius)] border border-input px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
+              {seleccionado.description && (
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  {seleccionado.description}
+                </p>
+              )}
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-[var(--radius)] bg-secondary p-3">
+                  <p className="text-xs tracking-wide text-secondary-foreground/70 uppercase">
+                    Precio por {unidadLabel(seleccionado.unit)}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-secondary-foreground">
+                    {money(Number(seleccionado.basePricePerUnit))}
+                  </p>
+                </div>
+                <div className="rounded-[var(--radius)] bg-secondary p-3">
+                  <p className="text-xs tracking-wide text-secondary-foreground/70 uppercase">
+                    Stock disponible
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-secondary-foreground">
+                    {seleccionado.stockAvailable.toLocaleString("es-PA")}{" "}
+                    {unidadLabel(seleccionado.unit)}
+                  </p>
+                </div>
+                {seleccionado.condition && (
+                  <div className="rounded-[var(--radius)] bg-secondary p-3">
+                    <p className="text-xs tracking-wide text-secondary-foreground/70 uppercase">
+                      Estado del producto
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-secondary-foreground">
+                      {seleccionado.condition}
+                    </p>
+                  </div>
+                )}
+                {fecha(seleccionado.expirationDate) && (
+                  <div className="rounded-[var(--radius)] bg-secondary p-3">
+                    <p className="flex items-center gap-1.5 text-xs tracking-wide text-secondary-foreground/70 uppercase">
+                      <Calendar className="size-3.5" />
+                      Expira
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-secondary-foreground">
+                      {fecha(seleccionado.expirationDate)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5">
+                <p className="text-sm font-medium text-popover-foreground">Cantidad a comprar</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCantidad(String(Math.max(1, (Number(cantidad) || 1) - 1)))
+                    }
+                    disabled={(Number(cantidad) || 1) <= 1}
+                    aria-label="Disminuir cantidad"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full border border-input transition-colors hover:bg-secondary disabled:opacity-40"
+                  >
+                    <Minus className="size-4" />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max={seleccionado.stockAvailable}
+                    value={cantidad}
+                    onChange={(e) => setCantidad(e.target.value)}
+                    aria-label="Cantidad"
+                    className="w-full rounded-[var(--radius)] border border-input bg-background px-3 py-2 text-center text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCantidad(
+                        String(
+                          Math.min(
+                            seleccionado.stockAvailable,
+                            (Number(cantidad) || 1) + 1,
+                          ),
+                        ),
+                      )
+                    }
+                    disabled={(Number(cantidad) || 0) >= seleccionado.stockAvailable}
+                    aria-label="Aumentar cantidad"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full border border-input transition-colors hover:bg-secondary disabled:opacity-40"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-end justify-between rounded-[var(--radius)] bg-secondary p-4">
+                <p className="text-sm text-muted-foreground">Total estimado</p>
+                <p className="text-2xl font-semibold text-popover-foreground">
+                  {money(Number(seleccionado.basePricePerUnit) * (Number(cantidad) || 0))}
+                </p>
+              </div>
+
+              <div className="mt-6 flex gap-2">
+                <button
+                  onClick={() => setSeleccionado(null)}
+                  className="flex-1 rounded-[var(--radius)] border border-input px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {return ""}}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  <ShoppingCart className="size-4" />
+                  Agregar al carrito
+                </button>
+              </div>
+
+              <Link
+                to="/marketplace/carrito"
+                className="mt-3 block text-center text-sm font-medium text-primary hover:underline"
               >
-                Cancelar
-              </button>
-              <button
-                onClick={comprar}
-                disabled={comprando}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-              >
-                {comprando && <Loader2 className="size-4 animate-spin" />}
-                {comprando ? "Cargando..." : "Confirmar"}
-              </button>
+                Ver carrito
+              </Link>
             </div>
           </div>
         </div>

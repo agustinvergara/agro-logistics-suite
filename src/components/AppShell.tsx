@@ -16,10 +16,12 @@ const ROLE_NAV_LINKS: Record<Role, { label: string; to: string }[]> = {
   productor: [
     { label: "Panel de Productor", to: "/productor/publish" },
     { label: "Marketplace", to: "/marketplace/minisuper" },
+    { label: "Carrito", to: "/marketplace/carrito" },
     { label: "Admin", to: "/admin" },
   ],
   minisuper: [
     { label: "Marketplace", to: "/marketplace/minisuper" },
+    { label: "Carrito", to: "/marketplace/carrito" },
     { label: "Admin", to: "/admin" },
   ],
   transportista: [
