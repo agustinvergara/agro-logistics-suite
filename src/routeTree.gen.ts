@@ -11,9 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as MinisuperRouteImport } from './routes/minisuper'
 import { Route as TransportistaRouteImport } from './routes/transportista'
 import { Route as AuthRegistroRouteImport } from './routes/auth/registro'
+import { Route as MarketplaceCarritoRouteImport } from './routes/marketplace/carrito'
+import { Route as MarketplaceMinisuperRouteImport } from './routes/marketplace/minisuper'
 import { Route as ProductorPublishRouteImport } from './routes/productor/publish'
 
 const IndexRoute = IndexRouteImport.update({
@@ -26,11 +27,6 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MinisuperRoute = MinisuperRouteImport.update({
-  id: '/minisuper',
-  path: '/minisuper',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TransportistaRoute = TransportistaRouteImport.update({
   id: '/transportista',
   path: '/transportista',
@@ -39,6 +35,16 @@ const TransportistaRoute = TransportistaRouteImport.update({
 const AuthRegistroRoute = AuthRegistroRouteImport.update({
   id: '/auth/registro',
   path: '/auth/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceCarritoRoute = MarketplaceCarritoRouteImport.update({
+  id: '/marketplace/carrito',
+  path: '/marketplace/carrito',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceMinisuperRoute = MarketplaceMinisuperRouteImport.update({
+  id: '/marketplace/minisuper',
+  path: '/marketplace/minisuper',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductorPublishRoute = ProductorPublishRouteImport.update({
@@ -50,26 +56,29 @@ const ProductorPublishRoute = ProductorPublishRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/minisuper': typeof MinisuperRoute
   '/transportista': typeof TransportistaRoute
   '/auth/registro': typeof AuthRegistroRoute
+  '/marketplace/carrito': typeof MarketplaceCarritoRoute
+  '/marketplace/minisuper': typeof MarketplaceMinisuperRoute
   '/productor/publish': typeof ProductorPublishRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/minisuper': typeof MinisuperRoute
   '/transportista': typeof TransportistaRoute
   '/auth/registro': typeof AuthRegistroRoute
+  '/marketplace/carrito': typeof MarketplaceCarritoRoute
+  '/marketplace/minisuper': typeof MarketplaceMinisuperRoute
   '/productor/publish': typeof ProductorPublishRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/minisuper': typeof MinisuperRoute
   '/transportista': typeof TransportistaRoute
   '/auth/registro': typeof AuthRegistroRoute
+  '/marketplace/carrito': typeof MarketplaceCarritoRoute
+  '/marketplace/minisuper': typeof MarketplaceMinisuperRoute
   '/productor/publish': typeof ProductorPublishRoute
 }
 export interface FileRouteTypes {
@@ -77,34 +86,38 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/minisuper'
     | '/transportista'
     | '/auth/registro'
+    | '/marketplace/carrito'
+    | '/marketplace/minisuper'
     | '/productor/publish'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
-    | '/minisuper'
     | '/transportista'
     | '/auth/registro'
+    | '/marketplace/carrito'
+    | '/marketplace/minisuper'
     | '/productor/publish'
   id:
     | '__root__'
     | '/'
     | '/admin'
-    | '/minisuper'
     | '/transportista'
     | '/auth/registro'
+    | '/marketplace/carrito'
+    | '/marketplace/minisuper'
     | '/productor/publish'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  MinisuperRoute: typeof MinisuperRoute
   TransportistaRoute: typeof TransportistaRoute
   AuthRegistroRoute: typeof AuthRegistroRoute
+  MarketplaceCarritoRoute: typeof MarketplaceCarritoRoute
+  MarketplaceMinisuperRoute: typeof MarketplaceMinisuperRoute
   ProductorPublishRoute: typeof ProductorPublishRoute
 }
 
@@ -124,13 +137,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/minisuper': {
-      id: '/minisuper'
-      path: '/minisuper'
-      fullPath: '/minisuper'
-      preLoaderRoute: typeof MinisuperRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/transportista': {
       id: '/transportista'
       path: '/transportista'
@@ -143,6 +149,20 @@ declare module '@tanstack/react-router' {
       path: '/auth/registro'
       fullPath: '/auth/registro'
       preLoaderRoute: typeof AuthRegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace/carrito': {
+      id: '/marketplace/carrito'
+      path: '/marketplace/carrito'
+      fullPath: '/marketplace/carrito'
+      preLoaderRoute: typeof MarketplaceCarritoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace/minisuper': {
+      id: '/marketplace/minisuper'
+      path: '/marketplace/minisuper'
+      fullPath: '/marketplace/minisuper'
+      preLoaderRoute: typeof MarketplaceMinisuperRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/productor/publish': {
@@ -158,9 +178,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  MinisuperRoute: MinisuperRoute,
   TransportistaRoute: TransportistaRoute,
   AuthRegistroRoute: AuthRegistroRoute,
+  MarketplaceCarritoRoute: MarketplaceCarritoRoute,
+  MarketplaceMinisuperRoute: MarketplaceMinisuperRoute,
   ProductorPublishRoute: ProductorPublishRoute,
 }
 export const routeTree = rootRouteImport

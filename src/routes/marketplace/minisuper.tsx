@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Snowflake, ShoppingCart, X } from "lucide-react";
+import { Loader2, Snowflake, ShoppingCart, X, Package } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
-import { MOCK_PRODUCTOS, type Producto } from "@/lib/mock";
 import { AppShell } from "@/components/AppShell";
 
-export const Route = createFileRoute("/minisuper")({
+export const Route = createFileRoute("/marketplace/minisuper")({
   head: () => ({
     meta: [
       { title: "Panel de Minisuper — Mango App" },
@@ -24,25 +23,60 @@ export const Route = createFileRoute("/minisuper")({
   component: MinisuperPage,
 });
 
+type ProductoVista = {
+  id: number;
+  name: string;
+  category: string;
+  requiresRefrigeration: boolean;
+  basePricePerUnit: number;
+  stockAvailable: number;
+  producer?: string;
+  description?: string;
+  expirationDate?: string;
+  condition?: string;
+  unit?: string;
+  image?: string;
+};
+
+const UNIDAD_LABEL: Record<string, string> = {
+  Kilo: "kg",
+  Libra: "lb",
+  Unidad: "unidad",
+  Caja: "caja",
+  Saco: "saco",
+};
+
 function money(n: number) {
   return `$${n.toLocaleString("es-PA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function unidadLabel(unit?: string) {
+  return UNIDAD_LABEL[unit ?? ""] ?? unit ?? "unidad";
+}
+
 function MinisuperPage() {
-  const [productos, setProductos] = useState<Producto[]>([]);
+  const [productos, setProductos] = useState<ProductoVista[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seleccionado, setSeleccionado] = useState<Producto | null>(null);
+  const [seleccionado, setSeleccionado] = useState<ProductoVista | null>(null);
   const [cantidad, setCantidad] = useState("1");
   const [comprando, setComprando] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await apiFetch<Producto[]>("/api/marketplace/perecederos/list");
-        setProductos(Array.isArray(data) && data.length ? data : MOCK_PRODUCTOS);
-      } catch {
-        setProductos(MOCK_PRODUCTOS);
-        toast.info("Usando datos de prueba");
+        const data = await apiFetch<any[]>("/api/marketplace/perecederos/list");
+        
+        const normalizados = Array.isArray(data) ? data.map(p => ({
+          ...p,
+          basePricePerUnit: Number(p.basePricePerUnit ?? 0),
+          stockAvailable: Number(p.stockAvailable ?? 0),
+          requiresRefrigeration: Boolean(p.requiresRefrigeration),
+          image: p.photoUrls && Array.isArray(p.photoUrls) && p.photoUrls.length > 0 ? p.photoUrls[0] : undefined
+        })) : [];
+        
+        setProductos(normalizados);
+      } catch (error) {
+        toast.error("Error al cargar el marketplace");
       } finally {
         setLoading(false);
       }
@@ -58,13 +92,12 @@ function MinisuperPage() {
         body: { productId: seleccionado.id, quantity: Number(cantidad) },
       });
       toast.success("Compra realizada con éxito");
-    } catch {
-      toast.info("Usando datos de prueba");
-      toast.success("Compra realizada con éxito");
-    } finally {
-      setComprando(false);
       setSeleccionado(null);
       setCantidad("1");
+    } catch (error) {
+      toast.error("Aún no se ha integrado la función de compras con el backend real");
+    } finally {
+      setComprando(false);
     }
   }
 
@@ -79,46 +112,66 @@ function MinisuperPage() {
           <Loader2 className="size-4 animate-spin" />
           Cargando...
         </div>
+      ) : productos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+          <Package className="size-12 mb-4 opacity-20" />
+          <p>No hay productos disponibles en el mercado actualmente.</p>
+        </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {productos.map((p) => (
             <article
               key={p.id}
-              className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-5 shadow-soft"
+              className="flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold text-card-foreground">{p.name}</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {p.category}
-                    {p.producer ? ` · ${p.producer}` : ""}
-                  </p>
+              {p.image ? (
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  loading="lazy"
+                  className="h-40 w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-40 w-full items-center justify-center bg-secondary">
+                  <Package className="size-10 text-muted-foreground/50" />
                 </div>
-                {p.requiresRefrigeration && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-secondary-foreground">
-                    <Snowflake className="size-3" />
-                    Refrigerado
-                  </span>
-                )}
-              </div>
+              )}
 
-              <div className="mt-5 flex items-end justify-between">
-                <div>
-                  <p className="text-2xl font-semibold text-foreground">
-                    {money(Number(p.basePricePerUnit))}
-                  </p>
-                  <p className="text-xs text-muted-foreground">por unidad</p>
+              <div className="flex flex-1 flex-col p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-card-foreground">{p.name}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {p.category}
+                      {p.producer ? ` · ${p.producer}` : ""}
+                    </p>
+                  </div>
+                  {p.requiresRefrigeration && (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-secondary-foreground">
+                      <Snowflake className="size-3" />
+                      Refrigerado
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">Stock: {p.stockAvailable}</p>
-              </div>
 
-              <button
-                onClick={() => setSeleccionado(p)}
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                <ShoppingCart className="size-4" />
-                Comprar
-              </button>
+                <div className="mt-5 flex items-end justify-between">
+                  <div>
+                    <p className="text-2xl font-semibold text-foreground">
+                      {money(p.basePricePerUnit)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">por {unidadLabel(p.unit)}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Stock: {p.stockAvailable} {unidadLabel(p.unit)}</p>
+                </div>
+
+                <button
+                  onClick={() => setSeleccionado(p)}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  <ShoppingCart className="size-4" />
+                  Comprar
+                </button>
+              </div>
             </article>
           ))}
         </div>
@@ -142,7 +195,7 @@ function MinisuperPage() {
             </div>
 
             <label className="mt-5 block text-sm font-medium">
-              Cantidad
+              Cantidad ({unidadLabel(seleccionado.unit)})
               <input
                 type="number"
                 min="1"

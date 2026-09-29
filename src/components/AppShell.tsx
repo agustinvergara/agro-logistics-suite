@@ -15,11 +15,11 @@ export function Spinner({ label = "Cargando..." }: { label?: string }) {
 const ROLE_NAV_LINKS: Record<Role, { label: string; to: string }[]> = {
   productor: [
     { label: "Panel de Productor", to: "/productor/publish" },
-    { label: "Marketplace", to: "/minisuper" },
+    { label: "Marketplace", to: "/marketplace/minisuper" },
     { label: "Admin", to: "/admin" },
   ],
   minisuper: [
-    { label: "Marketplace", to: "/minisuper" },
+    { label: "Marketplace", to: "/marketplace/minisuper" },
     { label: "Admin", to: "/admin" },
   ],
   transportista: [
