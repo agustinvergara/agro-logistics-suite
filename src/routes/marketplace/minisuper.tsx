@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Calendar, Loader2, Minus, Plus, Snowflake, ShoppingCart, X, Package } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
+import { useCart } from "@/hooks/useCart";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/marketplace/minisuper")({
@@ -91,19 +92,18 @@ function MinisuperPage() {
     })();
   }, []);
 
-  async function comprar() {
+  const { addItem } = useCart();
+
+  async function agregarAlCarrito() {
     if (!seleccionado) return;
     setComprando(true);
     try {
-      await apiFetch("/api/marketplace/ordenes/comprar", {
-        method: "POST",
-        body: { productId: seleccionado.id, quantity: Number(cantidad) },
-      });
-      toast.success("Compra realizada con éxito");
+      await addItem(seleccionado, Number(cantidad));
+      toast.success("Producto agregado al carrito");
       setSeleccionado(null);
       setCantidad("1");
     } catch (error) {
-      toast.error("Aún no se ha integrado la función de compras con el backend real");
+      toast.error("Error al agregar al carrito");
     } finally {
       setComprando(false);
     }
@@ -332,11 +332,12 @@ function MinisuperPage() {
                   Cancelar
                 </button>
                 <button
-                  onClick={() => {return ""}}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                  onClick={agregarAlCarrito}
+                  disabled={comprando}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
-                  <ShoppingCart className="size-4" />
-                  Agregar al carrito
+                  {comprando ? <Loader2 className="size-4 animate-spin" /> : <ShoppingCart className="size-4" />}
+                  {comprando ? "Agregando..." : "Agregar al carrito"}
                 </button>
               </div>
 

@@ -37,18 +37,13 @@ function CarritoPage() {
     if (!items.length) return;
     setConfirmando(true);
     try {
-      await apiFetch("/api/marketplace/ordenes/comprar", {
+      await apiFetch("/api/marketplace/ordenes/checkout", {
         method: "POST",
-        body: {
-          items: items.map((i) => ({ productId: i.producto.id, quantity: i.cantidad })),
-        },
       });
-      toast.success("Orden de compra realizada con éxito");
-      clearCart();
-    } catch {
-      toast.info("Usando datos de prueba");
-      toast.success("Orden de compra realizada con éxito");
-      clearCart();
+      toast.success("Orden de compra generada con éxito");
+      await clearCart(); // Llama al backend para limpiar todo
+    } catch (error) {
+      toast.error("Error al procesar la compra");
     } finally {
       setConfirmando(false);
     }
@@ -70,7 +65,7 @@ function CarritoPage() {
             </p>
           </div>
           <Link
-            to="/minisuper"
+            to="/marketplace/minisuper"
             className="rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             Ir al Mercado
