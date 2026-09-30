@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ImageCarousel } from "@/components/ui/image-carousel";
 import { Calendar, Loader2, Minus, Plus, Snowflake, ShoppingCart, X, Package } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -36,7 +37,7 @@ type ProductoVista = {
   expirationDate?: string;
   condition?: string;
   unit?: string;
-  image?: string;
+  images?: string[];
 };
 
 const UNIDAD_LABEL: Record<string, string> = {
@@ -75,13 +76,20 @@ function MinisuperPage() {
       try {
         const data = await apiFetch<any[]>("/api/marketplace/perecederos/list");
         
-        const normalizados = Array.isArray(data) ? data.map(p => ({
-          ...p,
-          basePricePerUnit: Number(p.basePricePerUnit ?? 0),
-          stockAvailable: Number(p.stockAvailable ?? 0),
-          requiresRefrigeration: Boolean(p.requiresRefrigeration),
-          image: p.photoUrls && Array.isArray(p.photoUrls) && p.photoUrls.length > 0 ? p.photoUrls[0] : undefined
-        })) : [];
+        const normalizados = Array.isArray(data) ? data.map(p => {
+          let urls = [];
+          try {
+            urls = typeof p.photoUrls === 'string' ? JSON.parse(p.photoUrls) : (p.photoUrls || []);
+          } catch (e) {}
+          
+          return {
+            ...p,
+            basePricePerUnit: Number(p.basePricePerUnit ?? 0),
+            stockAvailable: Number(p.stockAvailable ?? 0),
+            requiresRefrigeration: Boolean(p.requiresRefrigeration),
+            images: Array.isArray(urls) ? urls : []
+          };
+        }) : [];
         
         setProductos(normalizados);
       } catch (error) {
@@ -132,18 +140,9 @@ function MinisuperPage() {
               key={p.id}
               className="flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft"
             >
-              {p.image ? (
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  loading="lazy"
-                  className="h-40 w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-40 w-full items-center justify-center bg-secondary">
-                  <Package className="size-10 text-muted-foreground/50" />
-                </div>
-              )}
+              <div className="h-40 w-full relative">
+                <ImageCarousel images={p.images} alt={p.name} className="h-40 w-full" />
+              </div>
 
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-start justify-between gap-3">
@@ -188,17 +187,9 @@ function MinisuperPage() {
       {seleccionado && (
  <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-foreground/40 p-4">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--radius)] border border-border bg-popover shadow-soft">
-            {seleccionado.image ? (
-              <img
-                src={seleccionado.image}
-                alt={seleccionado.name}
-                className="h-56 w-full rounded-t-[var(--radius)] object-cover"
-              />
-            ) : (
-              <div className="flex h-40 w-full items-center justify-center rounded-t-[var(--radius)] bg-secondary">
-                <ShoppingCart className="size-10 text-muted-foreground" />
-              </div>
-            )}
+            <div className="h-56 w-full relative">
+              <ImageCarousel images={seleccionado.images} alt={seleccionado.name} className="h-56 w-full rounded-t-[var(--radius)]" />
+            </div>
 
             <div className="p-6">
               <div className="flex items-start justify-between gap-3">

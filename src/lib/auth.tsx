@@ -11,7 +11,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 export const ROLE_ROUTES: Record<Role, string> = {
   productor: "/productor/publish",
-  minisuper: "/minisuper",
+  minisuper: "/marketplace/minisuper",
   transportista: "/transportista",
   admin: "/admin",
 };
