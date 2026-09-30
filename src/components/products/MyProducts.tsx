@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ImageCarousel } from "@/components/ui/image-carousel";
 import { Calendar, Loader2, Package, PackageCheck, Snowflake, X } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -31,7 +32,7 @@ type ProductoVista = {
   expirationDate?: string;
   condition?: string;
   unit?: string;
-  image?: string;
+  images?: string[];
 };
 
 const UNIDAD_LABEL: Record<string, string> = {
@@ -77,14 +78,20 @@ export function MyProducts() {
         const data = await apiFetch<any[]>("/api/marketplace/perecederos/list");
         
         // El backend ahora devuelve los campos exactos con camelCase
-        const normalizados = Array.isArray(data) ? data.map(p => ({
-          ...p,
-          basePricePerUnit: Number(p.basePricePerUnit ?? 0),
-          stockAvailable: Number(p.stockAvailable ?? 0),
-          requiresRefrigeration: Boolean(p.requiresRefrigeration),
-          // Si tuviéramos fotos reales en S3
-          image: p.photoUrls && Array.isArray(p.photoUrls) && p.photoUrls.length > 0 ? p.photoUrls[0] : undefined
-        })) : [];
+        const normalizados = Array.isArray(data) ? data.map(p => {
+          let urls = [];
+          try {
+            urls = typeof p.photoUrls === 'string' ? JSON.parse(p.photoUrls) : (p.photoUrls || []);
+          } catch (e) {}
+          
+          return {
+            ...p,
+            basePricePerUnit: Number(p.basePricePerUnit ?? 0),
+            stockAvailable: Number(p.stockAvailable ?? 0),
+            requiresRefrigeration: Boolean(p.requiresRefrigeration),
+            images: Array.isArray(urls) ? urls : []
+          };
+        }) : [];
         
         setProductos(normalizados);
       } catch (error) {
@@ -139,20 +146,9 @@ export function MyProducts() {
               onClick={() => setDetalle(p)}
               className="group flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-popover text-left shadow-soft transition-shadow hover:shadow-md"
             >
-              {p.image ? (
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  loading="lazy"
-                  width={512}
-                  height={512}
-                  className="h-40 w-full object-cover transition-transform group-hover:scale-[1.03]"
-                />
-              ) : (
-                <div className="flex h-40 w-full items-center justify-center bg-secondary">
-                  <Package className="size-10 text-muted-foreground" />
-                </div>
-              )}
+              <div className="h-40 w-full relative">
+                <ImageCarousel images={p.images || (p as any).photos} alt={p.name} className="h-40 w-full" />
+              </div>
 
               <div className="flex flex-1 flex-col p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -192,17 +188,9 @@ export function MyProducts() {
       {detalle && (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-foreground/40 p-4">
           <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[var(--radius)] border border-border bg-popover shadow-soft">
-            {detalle.image ? (
-              <img
-                src={detalle.image}
-                alt={detalle.name}
-                className="h-56 w-full rounded-t-[var(--radius)] object-cover"
-              />
-            ) : (
-              <div className="flex h-40 w-full items-center justify-center bg-secondary">
-                <Package className="size-10 text-muted-foreground" />
-              </div>
-            )}
+            <div className="h-56 w-full relative">
+              <ImageCarousel images={(detalle as any).images || (detalle as any).photos} alt={detalle.name} className="h-56 w-full rounded-t-[var(--radius)]" />
+            </div>
 
             <div className="p-6">
               <div className="flex items-start justify-between gap-3">

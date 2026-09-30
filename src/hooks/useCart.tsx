@@ -30,19 +30,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const data = await apiFetch<any[]>("/api/marketplace/cart");
       if (Array.isArray(data)) {
-        const mapped = data.map((i) => ({
-          cantidad: i.quantity,
-          producto: {
-            id: i.productId,
-            name: i.name,
-            basePricePerUnit: i.basePricePerUnit,
-            stockAvailable: i.stockAvailable,
-            unit: i.unit,
-            image: i.photoUrls && Array.isArray(i.photoUrls) && i.photoUrls.length > 0 ? i.photoUrls[0] : undefined,
-            requiresRefrigeration: Boolean(i.requiresRefrigeration),
-            producer: i.producer,
-          },
-        }));
+        const mapped = data.map((i) => {
+          let urls = [];
+          try {
+            urls = typeof i.photoUrls === 'string' ? JSON.parse(i.photoUrls) : (i.photoUrls || []);
+          } catch (e) {}
+
+          return {
+            cantidad: i.quantity,
+            producto: {
+              id: i.productId,
+              name: i.name,
+              basePricePerUnit: i.basePricePerUnit,
+              stockAvailable: i.stockAvailable,
+              unit: i.unit,
+              image: Array.isArray(urls) && urls.length > 0 ? urls[0] : undefined,
+              requiresRefrigeration: Boolean(i.requiresRefrigeration),
+              producer: i.producer,
+            },
+          };
+        });
         setItems(mapped);
       }
     } catch {

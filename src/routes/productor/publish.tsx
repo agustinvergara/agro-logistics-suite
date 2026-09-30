@@ -106,33 +106,62 @@ function PublishProductPage() {
   async function publicar(e: FormEvent) {
     e.preventDefault();
     setPublishing(true);
-    const payload = {
-      name,
-      category,
-      requiresRefrigeration,
-      basePricePerUnit: Number(basePricePerUnit),
-      stockAvailable: Number(stockAvailable),
-      unitType: unit,
-      description,
-      expirationDate: expirationDate || null,
-      conditionType: condition,
-      photoUrls: [], // TODO: Subir a S3 y reemplazar
-    };
+
     try {
+      const uploadedUrls: string[] = [];
+      const productRef = crypto.randomUUID(); // Referencia temporal para la carpeta en S3
+
+      // 1. Subir las imágenes a S3
+      for (const p of photos) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(p.file);
+        });
+
+        const res = await apiFetch<{ url: string }>("/api/assets/image/upload", {
+          method: "POST",
+          body: {
+            productReference: productRef,
+            filename: p.file.name,
+            base64,
+          },
+        });
+        
+        if (res?.url) {
+          uploadedUrls.push(res.url);
+        }
+      }
+
+      // 2. Publicar el producto con las URLs devueltas por AWS S3
+      const payload = {
+        name,
+        category,
+        requiresRefrigeration,
+        basePricePerUnit: Number(basePricePerUnit),
+        stockAvailable: Number(stockAvailable),
+        unitType: unit,
+        description,
+        expirationDate: expirationDate || null,
+        conditionType: condition,
+        photoUrls: uploadedUrls,
+      };
+
       await apiFetch("/api/marketplace/perecederos/publish", { method: "POST", body: payload });
       toast.success("Producto publicado con éxito");
       
       const detail: ProductoPublicadoDetalle = {
         name,
-        category,
+        category: category || "Frutas",
         requiresRefrigeration,
         basePricePerUnit: Number(basePricePerUnit),
         stockAvailable: Number(stockAvailable),
         unit,
         description,
         expirationDate,
-        condition,
-        photos: []
+        condition: condition || "Fresco",
+        image: uploadedUrls.length > 0 ? uploadedUrls[0] : undefined
       };
       window.dispatchEvent(new CustomEvent(PRODUCTO_PUBLICADO_EVENT, { detail }));
     } catch (error) {
