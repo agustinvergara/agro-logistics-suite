@@ -1,7 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LogOut, Leaf } from "lucide-react";
+import { LogOut, Leaf, ShoppingCart } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { ROLE_ROUTES, useAuth, type Role } from "@/lib/auth";
+import { useCart } from "@/hooks/useCart";
 
 export function Spinner({ label = "Cargando..." }: { label?: string }) {
   return (
@@ -15,11 +16,13 @@ export function Spinner({ label = "Cargando..." }: { label?: string }) {
 const ROLE_NAV_LINKS: Record<Role, { label: string; to: string }[]> = {
   productor: [
     { label: "Panel de Productor", to: "/productor/publish" },
-    { label: "Marketplace", to: "/minisuper" },
+    { label: "Marketplace", to: "/marketplace/minisuper" },
+    { label: "Carrito", to: "/marketplace/carrito" },
     { label: "Admin", to: "/admin" },
   ],
   minisuper: [
-    { label: "Marketplace", to: "/minisuper" },
+    { label: "Marketplace", to: "/marketplace/minisuper" },
+    { label: "Carrito", to: "/marketplace/carrito" },
     { label: "Admin", to: "/admin" },
   ],
   transportista: [
@@ -48,6 +51,7 @@ export function AppShell({
   const navigate = useNavigate();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const { totalItems } = useCart();
 
   useEffect(() => {
     if (!ready) return;
@@ -81,6 +85,27 @@ export function AppShell({
           <nav className="flex flex-wrap items-center gap-1 text-sm">
             {myLinks.map((link) => {
               const isActive = currentPath.startsWith(link.to);
+              
+              if (link.to === "/marketplace/carrito") {
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`relative inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors ${
+                      isActive ? "bg-background/25 font-medium" : "hover:bg-background/15"
+                    }`}
+                  >
+                    <ShoppingCart className="size-4" />
+                    {link.label}
+                    {totalItems > 0 && (
+                      <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                        {totalItems > 99 ? "99+" : totalItems}
+                      </span>
+                    )}
+                  </Link>
+                );
+              }
+
               return (
                 <Link
                   key={link.to}
